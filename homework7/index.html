@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Hong Kong Budget 2018</title>
+    <meta charset="utf-8" />
+</head>
+
+<style>
+    .container {
+        text-align: center;
+    }
+    
+    h1 {
+        font-size: 24px;
+        margin-left: 15px;
+        margin-top: 50px;
+        color: #3c3c3c;
+        font-family: open sans;
+    }
+    
+    h2 {
+        font-size: 15px;
+        margin-left: 15px;
+    }
+    
+    p {
+        font-size: 15px;
+        margin-left: 15px;
+        color: #3c3c3c;
+        font-family: open sans;
+    }
+    
+    body {
+        margin: 15px;
+        background-color: #F1F3F3;
+    }
+    
+    .bar {
+        fill: #e8aca0;
+    }
+    
+    .bar:hover {
+        fill: #935347;
+    }
+    
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: #D4D8DA;
+        stroke-width: 1px;
+        shape-rendering: crispEdges;
+    }
+    
+    .x path {
+        display: none;
+    }
+</style>
+
+<body>
+    <h1>Hong Kong Budget 2018-19</h1>
+    <br>
+    <p>Hong Kong government released the Budget for the year at the end of February. </p>
+    <p>Here are two fo those key figures which has evoked much attention.</p>
+    <br>
+    <h2>Government Expenditure for the recent five years ($B)</h2>
+    <svg id='bar' width="700" height="200"></svg>
+    <h2>2018-19 Recurrent Expenditure Estimates</h2>
+    <svg id='pie' width="700" height="300"></svg>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+
+    <script>
+        // bar chart
+        var margin = {
+            top: 15,
+            right: 25,
+            bottom: 15,
+            left: 50,
+        };
+
+        var width = 600 - margin.left - margin.right,
+            height = 200 - margin.top - margin.bottom;
+
+        var bar_svg = d3.select("#bar").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var tooltip = d3.select("#bar").append("div").attr("class", "toolTip");
+
+        var x = d3.scaleLinear().range([0, width]);
+        var y = d3.scaleBand().range([height, 0]);
+
+        var yAxis = d3.axisLeft(y);
+
+        var g = +bar_svg.append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        bar_svg.append("text")
+            .attr("x", -30)
+            .text("Year")
+            .attr("font-size", "12px")
+
+        d3.csv("annual_expen.csv", type, function(error, data) {
+            if (error) throw error;
+
+            x.domain([0, d3.max(data, function(d) {
+                return d.expenditure;
+            })]);
+
+            y.domain(data.map(function(d) {
+                    return d.time;
+                }))
+                .paddingInner(0.3)
+                .paddingOuter(0.3);
+
+            bar_svg.append("g")
+                .attr("class", "y axis")
+                .call(yAxis);
+
+            bar_svg.selectAll(".bar")
+                .data(data)
+                .enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", 0)
+                .attr("height", y.bandwidth())
+                .attr("y", function(d) {
+                    return y(d.time);
+                })
+                .attr("width", function(d) {
+                    return x(d.expenditure);
+                });
+
+            bar_svg.selectAll(".text")
+                .data(data)
+                .enter()
+                .append("text")
+                .attr("class", "label")
+                .attr("y", (function(d) {
+                    return y(d.time) + y.bandwidth() * 0.7;
+                }))
+                .attr("x", function(d) {
+                    return x(d.expenditure) * 0.85;
+                })
+                .attr("dx", ".5em")
+                .attr("fill", "#FFFFFF")
+                .attr("font-size", "12px")
+                .text(function(d) {
+                    return d.expenditure;
+                });
+        });
+
+        function type(d) {
+            d.expenditure = +d.expenditure;
+            return d;
+        }
+
+        // pie chart
+        var pie_svg = d3.select("#pie"),
+            width = +pie_svg.attr("width"),
+            height = +pie_svg.attr("height"),
+            radius = Math.min(width, height) / 2,
+            g = pie_svg.append("g").attr("transform", "translate(" + width / 1.8 + "," + ((height / 2) + 10) + ")");
+
+        var color = d3.scaleOrdinal(["#935347", "#a96052", "#be7061", "#e8aca0", "#64706c", "#6b7974", "#83938e", "#c7ad88", "#dfc5a0", "#efd7b5", "#ede9ce"]);
+
+        var pie = d3.pie()
+            .sort(null)
+            .value(function(d) {
+                return d.expenditure;
+            });
+
+        var path = d3.arc()
+            .outerRadius(radius * 0.9)
+            .innerRadius(radius * 0.5);
+
+        var label = d3.arc()
+            .outerRadius(radius - 40)
+            .innerRadius(radius - 40);
+
+        d3.csv("expenditure.csv", function(d) {
+            d.expenditure = +d.expenditure;
+            return d;
+        }, function(error, data) {
+            if (error) throw error;
+
+            var arc = g.selectAll(".arc")
+                .data(pie(data))
+                .enter().append("g")
+                .attr("class", "arc");
+
+            arc.append("path")
+                .attr("d", path)
+                .attr("fill", function(d) {
+                    return color(d.data.type);
+                });
+
+            g.selectAll("text").data(pie(data))
+                .enter().append("text")
+                .attr("class", "label")
+                .attr("transform", function(d) {
+                    return "translate(" + label.centroid(d) + ")";
+                })
+                .attr("dy", "0.1em")
+                .attr("font-size", "12px")
+                .attr("fill", "#ffffff")
+                .text(function(d) {
+                    return (d.data.expenditure).toPrecision(2) + "%";
+                });
+
+            // Setup legend
+            var legendDotSize = 25;
+            var legendWrapper = pie_svg.append("g")
+                .attr("class", "legend")
+                .attr("transform", function(d) {
+                    return "translate(20,20)";
+                })
+
+            // The text of the legend
+            var legendText = legendWrapper.selectAll("text")
+                .data(data);
+
+            legendText.enter().append("text")
+                .attr("y", function(d, i) {
+                    return i * legendDotSize + 12;
+                })
+                .attr("x", 20)
+                .merge(legendText)
+                .attr("font-size", "12px")
+                .text(function(d) {
+                    return d.type;
+                });
+
+            legendText.exit().remove();
+
+            // The dots of the legend
+            var legendDot = legendWrapper.selectAll("rect")
+                .data(data);
+
+            legendDot.enter().append("rect")
+                .attr("y", function(d, i) {
+                    return i * legendDotSize;
+                })
+                .attr("rx", legendDotSize * 0.5)
+                .attr("ry", legendDotSize * 0.5)
+                .attr("width", legendDotSize * 0.5)
+                .attr("height", legendDotSize * 0.5)
+                .merge(legendDot)
+                .style("fill", function(d) {
+                    return color(d.type);
+                });
+
+            legendDot.exit().remove();
+        });
+    </script>
+</body>
