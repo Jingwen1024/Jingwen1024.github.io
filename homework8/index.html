@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+    body {
+        margin: 80px;
+        background-color: #F1F3F3
+    }
+    
+    h1 {
+        font-size: 28px;
+        color: #3c3c3c;
+        font-family: open sans;
+    }
+    
+    h2 {
+        font-size: 20px;
+        color: #3c3c3c;
+        font-family: open sans;
+    }
+    
+    p {
+        font-size: 16px;
+        color: #3c3c3c;
+        font-family: open sans;
+        text-align: left;
+        line-height: 2em;
+    }
+    
+    .bar {
+        fill: #777777;
+    }
+    /* .axis path,
+    .axis line {
+        fill: none;
+        stroke: #D4D8DA;
+        stroke-width: 1px;
+        shape-rendering: crispEdges;
+    } */
+    
+    .x path {
+        display: none;
+    }
+    
+    .toolTip {
+        position: absolute;
+        display: none;
+        min-width: 80px;
+        height: auto;
+        background: none repeat scroll 0 0 #ffffff;
+        border: 1px solid #777777;
+        padding: 14px;
+    }
+</style>
+
+<body>
+    <center>
+        <h1>Who Stole Your Data?</h1>
+        <h2>Some Data breach Events of the 21st century</h2>
+        <p>
+            </br>Facebook is undergoing one of its biggest public discontent yet. Eighty-seven million users were notified that their personal data was acquired by Cambridge Analytica, a political data firm with ties to President Trump's election campaign.
+            It is a big news but not new to the general public. Data breaches happen daily, in too many places at once to keep count. Here are some of the most significant breaches, showing companies involing in data breach, and what a huge population
+            it influenced as the figure below illustrates.</p>
+        <svg width="900" height="300"></svg>
+        <script src="https://d3js.org/d3.v4.min.js"></script>
+        <script>
+            var svg = d3.select("svg"),
+                margin = {
+                    top: 20,
+                    right: 20,
+                    bottom: 30,
+                    left: 140
+                },
+                width = +svg.attr("width") - margin.left - margin.right,
+                height = +svg.attr("height") - margin.top - margin.bottom;
+
+            var tooltip = d3.select("body").append("div").attr("class", "toolTip");
+
+            var x = d3.scaleLinear().range([0, width]);
+            var y = d3.scaleBand().range([height, 0]);
+            var g = svg.append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            d3.csv("data.csv", function(error, data) {
+                if (error) throw error;
+
+                data.sort(function(a, b) {
+                    return a.value - b.value;
+                });
+
+                x.domain([0, d3.max(data, function(d) {
+                    return d.value;
+                })]);
+
+                y.domain(data.map(function(d) {
+                    return d.area;
+                })).padding(0.3);
+
+                g.append("g")
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(0," + height + ")")
+                    // .call(d3.axisBottom(x).ticks(5).tickFormat(function(d) {
+                    //     return parseInt(d / 1000);
+                    // }).tickSizeInner([-height]));
+                g.append("g")
+                    .attr("class", "y axis")
+                    .call(d3.axisLeft(y));
+                g.selectAll(".bar")
+                    .data(data)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x", 0)
+                    .attr("height", y.bandwidth())
+                    .attr("y", function(d) {
+                        return y(d.area);
+                    })
+                    .attr("width", function(d) {
+                        return x(d.value);
+                    })
+                    .on("mouseover", function(d) {
+                        tooltip
+                            .style("left", d3.event.pageX - 50 + "px")
+                            .style("top", d3.event.pageY - 70 + "px")
+                            .style("display", "inline-block")
+                            .html("<Strong><span style='color:#a96052'>" + (d.area) + "</span></Strong>" +
+                                "<br>" + "<Strong>Impact:</Strong> " + (d.impact) +
+                                "<br>" + "<Strong>Breach:</Strong> " + (d.time1) +
+                                "<br>" + "<Strong>Disclosure:</Strong> " + (d.time2));
+                    })
+                    // .on("mouseout", function(d) {
+                    //     tooltip.style("display", "none");
+                    // });
+            });
+        </script>
+        <p><strong>#1 Yahoo</strong></br>The once dominant Internet giant Yahoo, reported two major data breaches of user account data to hackers. In September 2016, it announced to be the victim of the biggest data breach in history, likely by “a state-sponsored
+            actor,” in 2014. The attack compromised the real names, email addresses, dates of birth and telephone numbers of 500 million users. A couple of months later, in December, it buried that earlier record with the disclosure that a breach in 2013,
+            by a different group of hackers had compromised 1 billion accounts. Besides names, dates of birth, email addresses and passwords that were not as well protected as those involved in 2014, security questions and answers were also compromised.
+            In October of 2017, Yahoo revised that estimate, saying that, in fact, all 3 billion user accounts had been compromised.
+        </p>
+        <p><strong>#2 Adult Friend Finder/strong></strong></br>The FriendFinder Network, including casual hookup and adult content websites like Adult Friend Finder, Penthouse.com, Cams.com, iCams.com and Stripshow.com, was breached sometime in mid-October
+            2016. Hackers collected 20 years of data on six databases that included names, email addresses and passwords. Most of the passwords were protected only by the weak SHA-1 hashing algorithm, which meant that 99 percent of them had been cracked
+            by the time LeakedSource.com published its analysis of the entire data set on November 14.</p>
+        <p><strong>#3 eBay</strong></br>The online auction giant reported a cyberattack in May 2014 that it said exposed names, addresses, dates of birth and encrypted passwords of all of its 145 million users. The company said hackers got into the company
+            network using the credentials of three corporate employees, and had complete inside access for 229 days, during which time they were able to make their way to the user database. </p>
+        <p><strong> #4 Equifax</strong></br>Equifax, one of the largest credit bureaus in the U.S., said on Sept. 7, 2017 that an application vulnerability on one of their websites led to a data breach that exposed about 147.9 million consumers. The breach
+            was discovered on July 29, but the company says that it likely started in mid-May. </p>
+        <p><strong>#5 Heartland Payment Systems</strong></br> Heartland Payment Systems At the time of the breach, Heartland was processing 100 million payment card transactions per month for 175,000 merchants – most small- to mid-sized retailers. It wasn’t
+            discovered until January 2009, when Visa and MasterCard notified Heartland of suspicious transactions from accounts it had processed.</br>Among the consequences were that Heartland was deemed out of compliance with the Payment Card Industry
+            Data Security Standard (PCI DSS) and was not allowed to process the payments of major credit card providers until May 2009. The company also paid out an estimated $145 million in compensation for fraudulent payments. </p>
+        <p><strong>#6 Facebook</strong></br>The Facebook–Cambridge Analytica data scandal involves the collection of personally identifiable information of up to 87 million Facebook users that Cambridge Analytica began collecting in 2014. The data was used
+            to influence voter opinion on behalf of politicians who hire them. Following the breach, Facebook apologized and experienced public outcry and lowered stock prices, calling the way that Cambridge Analytica collected the data "inappropriate."
+        </p>
+        <p><strong> #7 Uber</strong></br> The company learned in late 2016 that two hackers were able to get names, email addresses, and mobile phone numbers of 57 users of the Uber app. They also got the driver license numbers of 600,000 Uber drivers. As
+            far as we know, no other data such as credit card or Social Security numbers were stolen. The hackers were able to access Uber’s GitHub account, where they found username and password credentials to Uber’s AWS account. Those credentials should
+            never have been on GitHub. Here’s the really bad part: It wasn’t until about a year later that Uber made the breach public. What’s worse, they paid the hackers $100,000 to destroy the data with no way to verify that they did, claiming it was
+            a “bug bounty” fee. Uber fired its CSO because of the breach, effectively placing the blame on him. </p>
+
+    </center>
+</body>
